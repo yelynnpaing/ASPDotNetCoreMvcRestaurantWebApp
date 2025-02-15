@@ -1,5 +1,6 @@
 ﻿using ASPDotNetCoreMvcRestaurantWebApp.Data;
 using Microsoft.EntityFrameworkCore;
+using System.Runtime;
 
 namespace ASPDotNetCoreMvcRestaurantWebApp.Models
 {
@@ -31,7 +32,23 @@ namespace ASPDotNetCoreMvcRestaurantWebApp.Models
 
         public async Task<T> GetByIdAsync(int id, QueryOptions<T> options)
         {
-            throw new NotImplementedException();
+            IQueryable<T> query = _dbSet;
+            if (options.HasWhere)
+            {
+                query = query.Where(options.where);
+            }
+            if (options.HasOrderBy)
+            {
+                query = query.OrderBy(options.OrderBy);
+            }
+            foreach(string include in options.GetIncludes())
+            {
+                query = query.Include(include);
+            }
+
+            var key = _context.Model.FindEntityType(typeof(T)).FindPrimaryKey().Properties.FirstOrDefault();
+            string primaryKeyName = key?.Name;
+            return await query.FirstOrDefaultAsync(e => EF.Property<int>(e, primaryKeyName) == id);
         }
 
         public Task UpdateAsync(T entity)
