@@ -1,0 +1,27 @@
+﻿@model IEnumerable<Product>
+
+@{
+    ViewBag.Title = "Restaurant Products";
+}
+
+<h3 class="fw-bold mb-3">Restaurant Menu Items</h3>
+<a asp-action="AddEdit" asp-controller="Product" class="btn btn-primary mb-3">New Item</a>
+<div class="row">
+    @foreach(Product prod in Model)
+    {
+        <div class="col-md-4">
+            <form asp-action="Delete" asp-controller="Product" method="post">
+                <input type="hidden" name="id" value="@prod.ProductId" />
+                <div class="card" style="width:18rem;">
+                    <img src="@Url.Content("~/images/" + prod.ImageUrl)" class="card-img-top fixed-img-height" alt="@prod.Name" />
+                    <div class="card-body">
+                        <h5 class="card-title fw-bold">@prod.Name</h5>
+                        <p class="card-text">@prod.Description</p>
+                        <p>@prod.Price.ToString("C")</p>
+                        <p>Quantity in stock : @prod.Stock</p>
+                    </div>
+                </div>
+            </form>
+        </div>
+    }
+</div>
