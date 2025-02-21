@@ -39,14 +39,20 @@ namespace ASPDotNetCoreMvcRestaurantWebApp.Controllers
             }
             else
             {
+                Product product = await products.GetByIdAsync(id, new QueryOptions<Product>
+                {
+                    Includes = "ProductIngredients.Ingredient, Category"
+                });
                 ViewBag.Operation = "Edit";
-                return View();
+                return View(product);
             }
         }
 
         [HttpPost]
-        public async Task<IActionResult> AddEdit(Product product, int[] ingredientsId, int catId)
+        public async Task<IActionResult> AddEdit(Product product, int[] ingredientIds, int catId)
         {
+            ViewBag.Ingredients = await ingredients.GetAllAsync();
+            ViewBag.Categories = await categories.GetAllAsync();
             if (ModelState.IsValid)
             {
                 if (product.ImageFile != null)
@@ -63,10 +69,8 @@ namespace ASPDotNetCoreMvcRestaurantWebApp.Controllers
 
                 if (product.ProductId == 0)
                 {
-                    ViewBag.Ingredients = await ingredients.GetAllAsync();
-                    ViewBag.Categories = await categories.GetAllAsync();
                     product.CategoryId = catId;
-                    foreach(int id in ingredientsId)
+                    foreach (int id in ingredientIds)
                     {
                         product.ProductIngredients?.Add(new ProductIngredient { IngredientId = id, ProductId = product.ProductId });
                     }
@@ -75,12 +79,52 @@ namespace ASPDotNetCoreMvcRestaurantWebApp.Controllers
                 }
                 else
                 {
-                    return RedirectToAction("Index", "Product");
+                    var existingProduct = await products.GetByIdAsync(product.ProductId, new QueryOptions<Product> { Includes = "ProductIngredients" });
+                    if (existingProduct is null)
+                    {
+                        ModelState.AddModelError("", "Product was not found.");
+                        ViewBag.Ingredients = await ingredients.GetAllAsync();
+                        ViewBag.Categories = await categories.GetAllAsync();
+                        return View(product);
+                    }
+                    existingProduct.Name = product.Name;
+                    existingProduct.Description = product.Description;
+                    existingProduct.Price = product.Price;
+                    existingProduct.Stock = product.Stock;
+                    existingProduct.CategoryId = catId;
+
+                    existingProduct.ProductIngredients?.Clear();
+                    foreach (int id in ingredientIds)
+                    {
+                        existingProduct.ProductIngredients?.Add(new ProductIngredient { IngredientId = id, ProductId = product.ProductId });
+                    }
+                    try
+                    {
+                        await products.UpdateAsync(existingProduct);
+                    }
+                    catch(Exception ex)
+                    {
+                        ModelState.AddModelError("", $"Error = {ex.GetBaseException().Message}");
+                        ViewBag.Ingredients = await ingredients.GetAllAsync();
+                        ViewBag.Categories = await categories.GetAllAsync();
+                        return View(product);
+                    }
                 }
             }
-            else
+            return RedirectToAction("Index", "Product");
+        }
+
+        public async Task<IActionResult> Delete(int id)
+        {
+            try
             {
-                return View(product);
+                await products.DeleteAsync(id);
+                return RedirectToAction("Index");
+            }
+            catch
+            {
+                ModelState.AddModelError("", "Prduct was not found");
+                return RedirectToAction("Index");
             }
         }
     }
