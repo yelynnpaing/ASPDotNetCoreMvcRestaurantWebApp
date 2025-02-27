@@ -80,6 +80,68 @@ namespace ASPDotNetCoreMvcRestaurantWebApp.Controllers
 
         }
 
+        [HttpGet]
+        [Authorize]
+        public async Task<IActionResult> Cart()
+        {
+            var model = HttpContext.Session.Get<OrderViewModel>("OrderViewModel");
+            if(model == null || model.OrderItems.Count == 0)
+            {
+                return RedirectToAction("Create");
+            }
+            return View(model);
+        }
+
+        [HttpPost]
+        [Authorize]
+        public async Task<IActionResult> PlaceOrder()
+        {
+            var model = HttpContext.Session.Get<OrderViewModel>("OrderViewModel");
+            if(model == null || model.OrderItems.Count == 0)
+            {
+                return RedirectToAction("Create");
+            }
+
+            //Create a new Order entity
+            Order order = new Order
+            {
+                OrderDate = DateTime.Now,
+                TotalAmount = model.TotalAmount,
+                UserId = _userManager.GetUserId(User)
+            };
+
+            //Add Order Items to the order entity
+            foreach(var item in model.OrderItems)
+            {
+                order.OrderItems.Add(new OrderItem
+                {
+                    ProductId = item.ProductId,
+                    Quantity = item.Quantity,
+                    Price = item.Price,
+                });
+            }
+
+            //Save order entity to the database
+            await _orders.AddAsync(order);
+            HttpContext.Session.Remove("OrderViewModel");
+            return RedirectToAction("ViewOrders");
+        }
+
+
+        [HttpGet]
+        [Authorize]
+        public async Task<IActionResult> ViewOrders()
+        {
+            var userId = _userManager.GetUserId(User);
+
+            var userOrders = await _orders.GetAllByIdAsync(userId, "UserId", new QueryOptions<Order>
+            {
+                Includes = "OrderItems.Product",
+            });
+
+            return View(userOrders);
+        }
+
         public IActionResult Index()
         {
             return View();

@@ -1,0 +1,42 @@
+﻿@model OrderViewModel
+
+@{
+    ViewBag.Title = "Cart Items";
+}
+
+<div>
+    <h2 class="mb-5">My Cart</h2>
+    <!-- Form to finalize and create the order -->
+    <form asp-action="PlaceOrder" method="post">
+        <h3 class="mb-3">Order Items</h3>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Quantity</th>
+                    <th>Price</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for (int i = 0; i< Model.OrderItems.Count; i++){
+                    <tr>
+                        <td>@Model.OrderItems[i].ProductName</td>
+                        <td>@Model.OrderItems[i].Quantity</td>
+                        <td>@Model.OrderItems[i].Price</td>   
+                        <td></td>
+                    </tr>
+                }
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td class="bg-primary bg-gradient fw-bold text-white">@Model.TotalAmount.ToString("C")</td>
+                </tr>
+            </tbody>
+        </table>
+        <div>
+            <input type="submit" value="Place Order"  class="btn btn-primary" />
+        </div>
+    </form>
+</div>

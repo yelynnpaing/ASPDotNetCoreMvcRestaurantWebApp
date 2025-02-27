@@ -5,6 +5,24 @@
 <ul class="navbar-nav">
 @if (SignInManager.IsSignedIn(User))
 {
+        <!-- Determine number of cart items save in session -->
+        <li class="nav-item me-2">
+            @{
+                int CartCount = 0;
+                if(Context.Session.Get<OrderViewModel>("OrderViewModel") != null)
+                {
+                    OrderViewModel model = Context.Session.Get<OrderViewModel>("OrderViewModel");
+                    CartCount = model.OrderItems.Sum(product => product.Quantity);
+                }
+            }
+        <a class="nav-link position-relative" asp-action="Cart" asp-controller="Order">
+          <i class="bi bi-cart3 fw-bold"></i>
+          <span class="position-absolute top-0 start-100 translate-middle badge rounded bg-danger">
+            @CartCount
+            <span class="visually-hidden">unread messages</span>
+          </span>
+        </a>
+    </li>
     <li class="nav-item">
         <a  class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">Hello @User.Identity?.Name!</a>
     </li>

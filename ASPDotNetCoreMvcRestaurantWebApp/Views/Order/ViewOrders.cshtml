@@ -1,0 +1,33 @@
+﻿@model IEnumerable<ASPDotNetCoreMvcRestaurantWebApp.Models.Order>
+@{
+    ViewData["Title"] = "My Orders";
+}
+
+<div> 
+    <table class="table table-border">
+        <thead>
+            <tr>
+                <th>Order Id</th>
+                <th>Order Date</th>
+                <th>Total Amount</th>
+                <th>Order Items</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach(var order in Model)
+            {
+                <tr>
+                    <td>@order.OrderId</td>
+                    <td>@order.OrderDate.ToString("MM,dd,yyyy")</td>
+                    <td>@order.TotalAmount.ToString("C")</td>
+                    <td>
+                        @foreach(var item in order.OrderItems)
+                        {
+                            <li>@item.Product.Name - @item.Quantity * @item.Price.ToString("C")</li>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
